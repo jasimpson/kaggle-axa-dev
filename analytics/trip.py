@@ -54,15 +54,23 @@ class Trip(object):
             self.series = se.get_series()
             self.tmp = se.get_tmpdata()
 
+            # Set which features to use
+            # To run on entire trip and for all features
+            use_all_trip_all_features_flag = 1
+            # To run on entire trip but for select features
+            use_all_trip_sel_features_flag = 0
+            # To run on select regions for select features
+            use_sel_trip_sel_features_flag = 0
+
             # Instantiate feature extractor
             # Make sure trip_data is computed before calling
-            if 1:
+            if use_all_trip_all_features_flag:
                 # To run on entire trip and for all features
                 fe = featureextractor.FeatureExtractor(
                     self.series, self.tmp)
                 self.features = fe.get_features()
 
-            if 0:
+            if use_all_trip_sel_features_flag:
                 # To run on entire trip but for select features
 
                 # Specify features wanted
@@ -80,7 +88,7 @@ class Trip(object):
                     self.series, self.tmp, feature_list)
                 self.features = fe.get_features()
 
-            if 0:
+            if use_sel_trip_sel_features_flag:
                 # To run on select regions for select features
 
                 """
@@ -232,151 +240,3 @@ class Trip(object):
                 data=np.ones((1, ncols)), columns=list(series_all))
 
         return series_vel_bin1, series_vel_bin2, series_vel_bin3
-
-    #---IMPROVED FEATURE METRICS-----------------------------------------------
-
-    def compute_acceleration_blocks(self):
-        if 'vel' in self.trip_data.columns and 'accel' in self.trip_data.columns:
-            vel_vals = np.array(self.trip_data['vel'])
-            accel_vals = np.array(self.trip_data['accel'])
-
-            vel_vals_lt25 = np.where(vel_vals <= 11.2)[0]
-            vel_vals_gt25_lt50 = np.where(
-                (vel_vals > 11.2) & (vel_vals <= 22.4))[0]
-            vel_vals_gt50 = np.where(vel_vals > 22.4)[0]
-
-            if len(vel_vals_lt25) == 0:
-                self.features['avg_accel_lt25'] = np.float64(0.0)
-                # self.features['std_decel_lt25'] =  np.float64(0.0)
-                self.features['avg_accel_lt25'] = np.float64(0.0)
-                # self.features['std_decel_lt25'] =  np.float64(0.0)
-            else:
-                tmp_vals = accel_vals[vel_vals_lt25]
-                all_accelerations = tmp_vals[np.where(tmp_vals > 0)[0]]
-                all_decelerations = tmp_vals[np.where(tmp_vals < 0)[0]]
-                if len(all_accelerations) == 0:
-                    self.features['avg_accel_lt25'] = np.float64(0.0)
-                    # self.features['std_accel_lt25'] =  np.float64(0.0)
-                else:
-                    self.features['avg_accel_lt25'] = np.float64(
-                        np.mean(all_accelerations))
-                    # self.features['std_accel_lt25'] =  np.float64(np.std(all_accelerations)/np.mean(all_accelerations))
-                if len(all_decelerations) == 0:
-                    self.features['avg_decel_lt25'] = np.float64(0.0)
-                    # self.features['std_decel_lt25'] =  np.float64(0.0)
-                else:
-                    self.features['avg_decel_lt25'] = np.float64(
-                        np.mean(all_decelerations))
-                    # self.features['std_decel_lt25'] =  np.float64(np.std(all_decelerations)/np.mean(all_decelerations))
-
-            if len(vel_vals_gt25_lt50) == 0:
-                self.features['avg_accel_gt25_lt50'] = np.float64(0.0)
-                self.features['avg_decel_gt25_lt50'] = np.float64(0.0)
-                # self.features['std_accel_gt25_lt50'] =  np.float64(0.0)
-                # self.features['std_decel_gt25_lt50'] =  np.float64(0.0)
-            else:
-                tmp_vals = accel_vals[vel_vals_gt25_lt50]
-                all_accelerations = tmp_vals[np.where(tmp_vals > 0)[0]]
-                all_decelerations = tmp_vals[np.where(tmp_vals < 0)[0]]
-                if len(all_accelerations) == 0:
-                    self.features['avg_accel_gt25_lt50'] = np.float64(0.0)
-                    # self.features['std_accel_gt25_lt50'] =  np.float64(0.0)
-                else:
-                    self.features['avg_accel_gt25_lt50'] = np.float64(
-                        np.mean(all_accelerations))
-                    # self.features['std_accel_gt25_lt50'] =  np.float64(np.std(all_accelerations)/np.mean(all_accelerations))
-                if len(all_decelerations) == 0:
-                    self.features['avg_decel_gt25_lt50'] = np.float64(0.0)
-                    # self.features['std_decel_gt25_lt50'] =  np.float64(0.0)
-                else:
-                    self.features['avg_decel_gt25_lt50'] = np.float64(
-                        np.mean(all_decelerations))
-                    # self.features['std_decel_gt25_lt50'] =  np.float64(np.std(all_decelerations)/np.mean(all_decelerations))
-
-            if len(vel_vals_gt50) == 0:
-                self.features['avg_accel_gt50'] = np.float64(0.0)
-                self.features['avg_decel_gt50'] = np.float64(0.0)
-                # self.features['std_accel_gt50'] =  np.float64(0.0)
-                # self.features['std_decel_gt50'] =  np.float64(0.0)
-            else:
-                tmp_vals = accel_vals[vel_vals_gt50]
-                all_accelerations = tmp_vals[np.where(tmp_vals > 0)[0]]
-                all_decelerations = tmp_vals[np.where(tmp_vals < 0)[0]]
-                if len(all_accelerations) == 0:
-                    self.features['avg_accel_gt50'] = np.float64(0.0)
-                    # self.features['std_accel_gt50'] =  np.float64(0.0)
-                else:
-                    self.features['avg_accel_gt50'] = np.float64(
-                        np.mean(all_accelerations))
-                    # self.features['std_accel_gt50'] =  np.float64(np.std(all_accelerations)/np.mean(all_accelerations))
-                if len(all_decelerations) == 0:
-                    self.features['avg_decel_gt50'] = np.float64(0.0)
-                    # self.features['std_decel_gt50'] =  np.float64(0.0)
-                else:
-                    self.features['avg_decel_gt50'] = np.float64(
-                        np.mean(all_decelerations))
-                    # self.features['std_decel_gt50'] =  np.float64(np.std(all_decelerations)/np.mean(all_decelerations))
-
-    def compute_acceleration_ngapproach(self):
-        '''A 5 second interval post stop or roll. The driver MUST have driven 
-        for at least 10 seconds above 1.0 ms post stop for this to be counted
-        unless at the end or start of a time window. If the stop is at the 
-        beginning and you cant reach back far enough for the average 
-        deceleration, dont use it. Obviously, a stop at the very end only 
-        allows for a deceleration calculation.'''
-
-        # Find all stops that last more than a 5 second period
-        if 'vel' in self.trip_data.columns and 'accel' in self.trip_data.columns:
-            vel_vals = np.array(self.trip_data['vel'])
-
-            # A true stop is considered as the stoptime parameter in seconds
-            # A true stop is when the velocity is 0
-            all_zero_vel = np.where(vel_vals <= 1.0)[0]
-
-            all_zero_diff = np.diff(all_zero_vel)
-            all_zero_diff[np.where(all_zero_diff < 10)[0]] = 1
-            zero_stop_indices = np.where(all_zero_diff > 1)[0] + 1
-            zero_stop_indices = np.append(0, zero_stop_indices)
-            zero_stop_indices = np.append(
-                zero_stop_indices, len(all_zero_diff))
-
-            previous_index = all_zero_vel[0]
-            for i in range(1, len(all_zero_vel)):
-                cur_index = all_zero_vel[i]
-                # Check if index is less than 5
-
-                # if indices
-            print all_zero_diff
-            print all_zero_vel[zero_stop_indices]
-            return all_zero_vel
-
-        else:
-            print 'No distance column in the dataframe to compute the stops'
-
-    def compute_travel_type_table(self):
-        '''Based on characteristic features, compute the typeof travel
-            1. Travel type - Local street driving
-            2. Travel type - Freeway like driving
-            3. Travel type - traffic
-            Label the Pandas dataframe in column ['drivingtype'] with strings
-            for each type, 'local','traffic','freeway' for each type. Transitions
-            between each type will be challenging to label.
-
-            Local is indicative of stops, with some sharp angled turns (~45degrees),slow
-            speed driving (less than 45 mph).
-
-            Traffic should show no sharp angled turns, but a lot of evidence of
-            low speed acceleration and decelerations.
-
-            Highway driving or open driving should show no stopping with lower angled
-            turns if any, and higher speeds (>55mph).
-
-            One type we might consider is local backroads type driving
-
-            velocity -> m/s to m/h is 2.237 multiplier
-            avg highway acceleration = 0.26 - 0.66 ft/s2
-            avg city acceleration = 1.48 - 4 ft/s2
-
-            max speeds greater than 100 m/s are aberrations in the data'''
-
-        pass

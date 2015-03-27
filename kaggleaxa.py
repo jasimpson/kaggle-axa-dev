@@ -146,10 +146,6 @@ csv_driver_ids = []
 csv_trips_ids = []
 csv_y_pred = []
 
-csv_ratios = []
-csv_train_scores = []
-csv_test_scores = []
-
 # Initialize score averages
 clf_score_train_sum = 0.0
 clf_score_test_sum = 0.0
@@ -259,14 +255,6 @@ if parfor_mode:
         clf_score_test = res[2]
         y_pred = res[3]
 
-        # Prediction class weight
-        ratio_of_1s_and_0s = np.mean(y_pred)
-        print "Ratio of 1s and 0s is: %f" % (ratio_of_1s_and_0s)
-        csv_ratios.extend([ratio_of_1s_and_0s])
-
-        csv_train_scores.extend([clf_score_train])
-        csv_test_scores.extend([clf_score_test])
-
         # Save
         csv_driver_ids.extend([driver_id] * 200)
         csv_trips_ids.extend(range(1, 201))
@@ -294,14 +282,6 @@ else:
         clf_score_test = results[2]
         y_pred = results[3]
 
-        # Prediction class weight
-        ratio_of_1s_and_0s = np.mean(y_pred)
-        print "Ratio of 1s and 0s is: %f" % (ratio_of_1s_and_0s)
-        csv_ratios.extend([ratio_of_1s_and_0s])
-
-        csv_train_scores.extend([clf_score_train])
-        csv_test_scores.extend([clf_score_test])
-
         # Save
         csv_driver_ids.extend([driver_id] * 200)
         csv_trips_ids.extend(range(1, 201))
@@ -317,16 +297,6 @@ else:
 ###############################################################################
 # Gather results from all drivers
 
-if 1:
-    # Pickle ratio_of_1s_and_0s
-    pickle.dump(csv_ratios, open(os.path.join(
-        'pickles', 'data_ratio_of_1s_and_0s.pickle'), "wb"))
-    pickle.dump(csv_train_scores, open(os.path.join(
-        'pickles', 'data_train_scores.pickle'), "wb"))
-    pickle.dump(csv_test_scores, open(os.path.join(
-        'pickles', 'data_test_scores.pickle'), "wb"))
-
-
 # Save feature importances if available
 if save_feature_importances:
     # Delete header (zeros) from clf_feature_importances array
@@ -338,18 +308,6 @@ if save_feature_importances:
         'pickles', 'data_clf_feature_importances_avg.pickle'), "wb"))
     pickle.dump(feature_names, open(os.path.join(
         'pickles', 'data_feature_names.pickle'), "wb"))
-
-# Save outputs to pickle if needed
-if 0:
-    pickle.dump(
-        X_true, open(os.path.join('pickles', 'data_X_true.pickle'), "wb"))
-    pickle.dump(
-        y_true, open(os.path.join('pickles', 'data_y_true.pickle'), "wb"))
-
-    pickle.dump(
-        out_int, open(os.path.join('pickles', 'data_out_int.pickle'), "wb"))
-    pickle.dump(
-        out_str, open(os.path.join('pickles', 'data_out_str.pickle'), "wb"))
 
 # Calculate score averages
 clf_score_train_avg = clf_score_train_sum / num_of_drivers
