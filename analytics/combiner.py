@@ -116,7 +116,7 @@ class Combiner(object):
 
         # Make it repeatably random
         # TODO: Remove/change random seed later
-        random.seed(42)
+        random.seed(None)
 
         # From list of all drivers, randomly select num_of_fake_drivers
         list_of_all_drivers = self.get_list_of_drivers(self.data_root_path)

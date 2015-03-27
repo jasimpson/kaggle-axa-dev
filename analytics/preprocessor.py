@@ -56,7 +56,7 @@ class Preprocessor(object):
     def reorder_fake_and_true(self, X, y):
         """Reorder to intersperse fake and true data points."""
         # TODO: Remove/change random seed later
-        np.random.seed(42)
+        np.random.seed(None)
         reorder = np.random.permutation(len(X))
         X = X[reorder]
         y = y[reorder]
@@ -67,7 +67,7 @@ class Preprocessor(object):
         """Split into train and test sets for cross validation."""
         # TODO: Remove/change random seed later
         X_train, X_test, y_train, y_test = cross_validation.train_test_split(
-            X, y, test_size=test_size, random_state=42)
+            X, y, test_size=test_size, random_state=None)
 
         return X_train, X_test, y_train, y_test
 

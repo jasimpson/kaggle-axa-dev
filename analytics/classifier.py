@@ -41,7 +41,7 @@ class Classifier(object):
         if self.classifier_name == 'RandomForestClassifier':
             # Init RandomForestClassifier
             self.clf = ensemble.RandomForestClassifier(
-                random_state=42,
+                random_state=None,
                 n_estimators=500,
                 max_features='sqrt')
         elif self.classifier_name == 'GradientBoostingClassifier':
@@ -50,11 +50,11 @@ class Classifier(object):
         elif self.classifier_name == 'LogisticRegression':
             # Init LogisticRegression
             self.clf = linear_model.LogisticRegression(
-                random_state=42,
+                random_state=None,
                 class_weight='auto')
         elif self.classifier_name == 'GMM':
             # Init GMM
-            self.clf = mixture.GMM(random_state=42)
+            self.clf = mixture.GMM(random_state=None)
         else:
             # Error
             print "ERROR: Incorrect classifier name"
