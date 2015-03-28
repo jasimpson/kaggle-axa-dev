@@ -95,9 +95,9 @@ def process_driver(driver_id):
 
         # Feature Importances
         if save_feature_importances:
-            clf_feature_importances = np.vstack(
-                (clf_feature_importances,
-                    classifier_object.feature_importances()))
+            clf_feature_importances = classifier_object.feature_importances()
+        else:
+            clf_feature_importances = []
 
         #######################################################################
 
@@ -109,7 +109,12 @@ def process_driver(driver_id):
         print "***ERROR*** on driver %d. Continuing to next" % driver_id
         pass
 
-    results = driver_id, clf_score_train, clf_score_test, y_pred
+    results = \
+        driver_id, \
+        clf_score_train, \
+        clf_score_test, \
+        y_pred, \
+        clf_feature_importances
 
     return results
 
@@ -129,6 +134,9 @@ gridsearch_mode = False
 
 # Set parallel processing mode
 parfor_mode = True
+
+# Save feature importances if available
+save_feature_importances = True
 
 # TODO: Move this to config file
 # Set location of data folder
@@ -151,13 +159,6 @@ clf_score_train_sum = 0.0
 clf_score_test_sum = 0.0
 clf_score_train_avg = 0.0
 clf_score_test_avg = 0.0
-
-# Initialize feature importance list
-# TODO: read sizes from num of features
-save_feature_importances = False
-num_features = 14  # 32  # 13  # 18  # 22
-feature_names = []
-clf_feature_importances = np.zeros([1, num_features])
 
 # Create submissions folder if it doesn't already exist
 try:
@@ -193,6 +194,12 @@ feature_names = combiner_object.get_list_of_feature_names()
 
 # Get num of features being used
 num_of_features = len(feature_names)
+
+# List to store feature importances
+if save_feature_importances:
+    clf_feature_importances_list = np.zeros([1, num_of_features])
+else:
+    clf_feature_importances_list = []
 
 print "###################################################################"
 
@@ -254,11 +261,14 @@ if parfor_mode:
         clf_score_train = res[1]
         clf_score_test = res[2]
         y_pred = res[3]
+        clf_feature_importances = res[4]
 
         # Save
         csv_driver_ids.extend([driver_id] * 200)
         csv_trips_ids.extend(range(1, 201))
         csv_y_pred.extend(y_pred)
+        clf_feature_importances_list = np.vstack(
+            (clf_feature_importances_list, clf_feature_importances))
 
         # Keep track of scores for averaging
         clf_score_train_sum = clf_score_train_sum + clf_score_train
@@ -281,11 +291,14 @@ else:
         clf_score_train = results[1]
         clf_score_test = results[2]
         y_pred = results[3]
+        clf_feature_importances = results[4]
 
         # Save
         csv_driver_ids.extend([driver_id] * 200)
         csv_trips_ids.extend(range(1, 201))
         csv_y_pred.extend(y_pred)
+        clf_feature_importances_list = np.vstack(
+            (clf_feature_importances_list, clf_feature_importances))
 
         # Keep track of scores for averaging
         clf_score_train_sum = clf_score_train_sum + clf_score_train
@@ -299,10 +312,11 @@ else:
 
 # Save feature importances if available
 if save_feature_importances:
-    # Delete header (zeros) from clf_feature_importances array
-    clf_feature_importances = np.delete(clf_feature_importances, (0), axis=0)
+    # Delete header (zeros) from clf_feature_importances_list array
+    clf_feature_importances_list = np.delete(
+        clf_feature_importances_list, (0), axis=0)
     # Average importances
-    clf_feature_importances_avg = np.mean(clf_feature_importances, axis=0)
+    clf_feature_importances_avg = np.mean(clf_feature_importances_list, axis=0)
     # Pickle importances for later
     pickle.dump(clf_feature_importances_avg, open(os.path.join(
         'pickles', 'data_clf_feature_importances_avg.pickle'), "wb"))
