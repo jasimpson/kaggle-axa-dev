@@ -49,65 +49,57 @@ def process_driver(driver_id):
             X_fake, X_true, y_fake, y_true)
 
     ###########################################################################
+    # Classifier section
 
-    try:
+    # Select the classifier
+    classifier_name = 'RandomForestClassifier'
+    #classifier_name = 'GradientBoostingClassifier'
+    #classifier_name = 'LogisticRegression'
+    #classifier_name = 'GMM'
 
-        #######################################################################
-        # Classifier section
+    # Instantiate the classifier object
+    classifier_object = analytics.classifier.Classifier(classifier_name)
 
-        # Select the classifier
-        classifier_name = 'RandomForestClassifier'
-        #classifier_name = 'GradientBoostingClassifier'
-        #classifier_name = 'LogisticRegression'
-        #classifier_name = 'GMM'
+    # Build the model
+    if gridsearch_mode:
+        # Gridsearch the model
+        clf_score_train, clf_score_test = \
+            classifier_object.gridsearch_model(
+                X_train, y_train, X_test, y_test)
+    else:
+        # Train the model
+        clf_score_train, clf_score_test = \
+            classifier_object.train_model(
+                X_train, y_train, X_test, y_test)
 
-        # Instantiate the classifier object
-        classifier_object = analytics.classifier.Classifier(classifier_name)
+    # Predict using the model
+    proba = True
+    y_pred = classifier_object.predict_model(X_true, proba)
 
-        # Build the model
-        if gridsearch_mode:
-            # Gridsearch the model
-            clf_score_train, clf_score_test = \
-                classifier_object.gridsearch_model(
-                    X_train, y_train, X_test, y_test)
-        else:
-            # Train the model
-            clf_score_train, clf_score_test = \
-                classifier_object.train_model(
-                    X_train, y_train, X_test, y_test)
+    # Calculate pr thresh based on desired pred class weights
+    desired_ratio_of_1s_to_0s = 0.75  # enter this value
+    proba_thresh = np.percentile(
+        y_pred, (1 - desired_ratio_of_1s_to_0s) * 100)
 
-        # Predict using the model
-        proba = True
-        y_pred = classifier_object.predict_model(X_true, proba)
+    # Threshold Probabilities
+    if proba:
+        y_pred = [1 if (p > proba_thresh) else 0 for p in y_pred]
 
-        # Calculate pr thresh based on desired pred class weights
-        desired_ratio_of_1s_to_0s = 0.75  # enter this value
-        proba_thresh = np.percentile(
-            y_pred, (1 - desired_ratio_of_1s_to_0s) * 100)
+    # Calculate true score (will always be ratio for this method)
+    actual_ratio_of_1s_to_0s = np.mean(y_pred)
+    clf_score_true = 1 - np.mean(np.logical_xor(y_true, y_pred))
 
-        # Threshold Probabilities
-        if proba:
-            y_pred = [1 if (p > proba_thresh) else 0 for p in y_pred]
+    # Feature Importances
+    if save_feature_importances:
+        clf_feature_importances = classifier_object.feature_importances()
+    else:
+        clf_feature_importances = []
 
-        # Calculate true score (will always be ratio for this method)
-        actual_ratio_of_1s_to_0s = np.mean(y_pred)
-        clf_score_true = 1 - np.mean(np.logical_xor(y_true, y_pred))
+    ###########################################################################
 
-        # Feature Importances
-        if save_feature_importances:
-            clf_feature_importances = classifier_object.feature_importances()
-        else:
-            clf_feature_importances = []
-
-        #######################################################################
-
-        print "Classifier scored %f on training dataset" % (clf_score_train)
-        print "Classifier scored %f on test dataset" % (clf_score_test)
-        print "Classifier scored %f on true dataset" % (clf_score_true)
-
-    except:
-        print "***ERROR*** on driver %d. Continuing to next" % driver_id
-        pass
+    print "Classifier scored %f on training dataset" % (clf_score_train)
+    print "Classifier scored %f on test dataset" % (clf_score_test)
+    print "Classifier scored %f on true dataset" % (clf_score_true)
 
     results = \
         driver_id, \
